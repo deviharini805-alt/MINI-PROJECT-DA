@@ -1,0 +1,41 @@
+import pandas as pd
+from dash import Dash, dcc, html, Input, Output
+import plotly.express as px
+# Load dataset
+df = pd.read_csv("energy.csv")
+# Create app
+app = Dash(__name__)
+# Layout
+app.layout = html.Div([html.H1("Global Energy Consumption Dashboard", style={'textAlign': 'center'}),
+ # Dropdown
+ dcc.Dropdown(
+ id='country-dropdown',
+ options=[{'label': c, 'value': c} for c in df['country'].dropna().unique()],
+ value='India'
+ ),
+ # Graphs
+ dcc.Graph(id='energy-graph'),
+ dcc.Graph(id='renewable-graph')
+])
+# Callback
+@app.callback(
+ [Output('energy-graph', 'figure'),
+ Output('renewable-graph', 'figure')],
+ [Input('country-dropdown', 'value')]
+)
+def update_graphs(selected_country):
+ data = df[df['country'] == selected_country]
+ # Energy graph
+ fig1 = px.line(
+ data, x='year', y='primary_energy_consumption',
+ title='Energy Consumption Over Time'
+ )
+ # Renewable graph
+ fig2 = px.line(
+ data, x='year', y='renewable_energy_share',
+ title='Renewable Energy Share'
+ )
+ return fig1, fig2
+# Run app
+if __name__ == '__main__':
+ app.run(debug=True)
